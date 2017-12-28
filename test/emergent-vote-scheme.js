@@ -1,8 +1,6 @@
 const helpers = require('./helpers');
-const Reputation = artifacts.require('./Reputation.sol');
 const EmergentVoteScheme = artifacts.require('./EmergentVoteScheme.sol');
 const StandardTokenMock = artifacts.require('./StandardTokenMock.sol');
-const ExecutableTest = artifacts.require('./ExecutableTest.sol');
 
 contract('EmergentVoteScheme', (accounts)=>{
     it('constructor should update params',async ()=>{
