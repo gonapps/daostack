@@ -73,6 +73,14 @@ contract('GenesisScheme', function(accounts) {
         assert.equal(Web3Utils.hexToUtf8(orgName),"testOrg");
     });
 
+    it("forgeOrg check token", async function() {
+        await setup(accounts,10,10);
+        const name = await token.name();
+        const sym = await token.symbol();
+        assert.equal(name, 'TEST');
+        assert.equal(sym, 'TST');
+    });
+
     it("forgeOrg check reputations and tokens to founders", async function() {
         await setup(accounts,10,10);
         var founderBalance = await token.balanceOf(accounts[0]);
