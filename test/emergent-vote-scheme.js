@@ -19,46 +19,41 @@ contract('EmergentVoteScheme', (accounts)=>{
         assert.equal(beneficiary, accounts[0]);
         assert.equal(hashedParameters, 0);
     });
-    
-    it('setProposalParameters param range', async ()=>{
+
+    it('setProposalParameters valid and invalid params', async ()=>{
         const token = await StandardTokenMock.new(accounts[0],10);
         const scheme = await EmergentVoteScheme.new(token.address,10,accounts[1]);
 
-        const examples = {
-            bad: {
-                percent: [
-                    -Math.round(Math.random()*100), // A negative number
-                    101 + Math.round(Math.random()*100), // Above 100%
-                    0 // corner case
-                ],
-                quorum: [
-                    -Math.round(Math.random()*100), // A negative number
-                    101 + Math.round(Math.random()*100), // Above 100%
-                    0 // corner case
-                ]
-            }
+        const goodExample = {
+            percent: 20,
+            quorum: 30,
+            boost: 3
         };
 
-        for(let i = 0 ; i < examples.bad.percent.length ; i++){
-            const percent = examples.bad.percent[i];
-            try{
-                await scheme.setProposalParameters(percent,Math.round(Math.random()*100),3);
-                assert(false, 'Should fail due to out-of-range percent');
-            }
-            catch(e){
-                helpers.assertVMException(e);
-            } 
-        }  
-        for(let i = 0 ; i < examples.bad.quorum.length ; i++){
-            const quorum = examples.bad.quorum[i];
-            try{
-                await scheme.setProposalParameters(Math.round(Math.random()*100),quorum,3);
-                assert(false, 'Should fail due to out-of-range quorum');
-            }
-            catch(e){
-                helpers.assertVMException(e);
-            } 
-        }    
-    });
+        await scheme.setProposalParameters(
+            goodExample.percent,
+            goodExample.quorum,
+            goodExample.boost);
 
+        const badExamples = [
+            {percent: -Math.round(Math.random()*100)}, // negative
+            {percent: 101 + Math.round(Math.random()*100)}, // above 100%
+            {percent: 0}, // corner case
+
+            {quorum: -Math.round(Math.random()*100)}, // negative
+            {quorum: 101 + Math.round(Math.random()*100)}, // above 100%
+            {quorum: 0}, // corner case
+        ].map(o => Object.assign({},goodExample,o));
+
+        for(let i = 0 ; i < badExamples.length ; i++){
+            const example = badExamples[i];
+            try{
+                await scheme.setProposalParameters(example.percent,example.quorum,example.boost);
+                assert(false, 'Should fail due to out-of-range param. Params were: ' + JSON.stringify(example,undefined,2));
+            }
+            catch(e){
+                helpers.assertVMException(e);
+            } 
+        } 
+    });
 });
