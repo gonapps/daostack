@@ -54,13 +54,13 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         uint boostedFunds; // amount of funds that has been invested in this proposal
     }
 
-    event LogNewProposal(bytes32 indexed _proposalId, address _proposer, bytes32 _paramsHash);
-    event LogCancelProposal(bytes32 indexed _proposalId);
-    event LogExecuteProposal(bytes32 indexed _proposalId, uint _decision);
-    event LogVoteProposal(bytes32 indexed _proposalId, address indexed _voter, uint _vote, uint _reputation, bool _isOwnerVote);
-    event LogCancelVoting(bytes32 indexed _proposalId, address indexed _voter);
+    event NewProposal(bytes32 indexed _proposalId, address _proposer, bytes32 _paramsHash);
+    event CancelProposal(bytes32 indexed _proposalId);
+    event ExecuteProposal(bytes32 indexed _proposalId, uint _decision);
+    event VoteProposal(bytes32 indexed _proposalId, address indexed _voter, uint _vote, uint _reputation, bool _isOwnerVote);
+    event CancelVoting(bytes32 indexed _proposalId, address indexed _voter);
 
-    mapping(address=>Organization) public organizations;
+    mapping(address=>Organization) public organizationsData;
     mapping(bytes32=>OrgParameters) public organizationsParameters;
     mapping(bytes32=>ProposalParameters) public proposalsParameters;  // A mapping from hashes to parameters
     mapping(bytes32=>Proposal) public proposals; // Mapping from the ID of the proposal to the proposal itself.
@@ -71,18 +71,20 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
     /**
     * @dev Check that there is owner for the proposal and he sent the transaction
     */
-    modifier onlyProposalOwner(bytes32 _proposalId) {
-        require(msg.sender == proposals[_proposalId].owner);
-        _;
-    }
+      modifier onlyProposalOwner(bytes32 _proposalId) {
+          require(msg.sender == proposals[_proposalId].owner);
+          _;
+      }
 
     /**
     * @dev Check that the proposal is votable (opened and not executed yet)
     */
-    modifier votable(bytes32 _proposalId) {
-        require(proposals[_proposalId].opened);
-        _;
-    }
+      modifier votable(bytes32 _proposalId) {
+          require(proposals[_proposalId].opened);
+          _;
+      }
+
+
 
     function EmergentVoteScheme(StandardToken _nativeToken, uint _fee, address _beneficiary) public {
         updateParameters(
@@ -192,13 +194,12 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         bytes32 _paramsHash,
         address _avatar,
         ExecutableInterface _executable
-    ) public returns(bytes32)
+    ) public
+      onlyRegisteredOrganization(_avatar)
+     returns(bytes32)
     {
         // ToDo: check parameters are OK:
         require(_numOfChoices > 0 && _numOfChoices <= MAX_NUM_OF_CHOICES);
-
-        // Check org is registered:
-        require(organizations[_avatar].isRegistered);
 
         // Check params exist:
         require(proposalsParameters[_paramsHash].precReq != 0);
@@ -216,7 +217,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         proposal.owner = msg.sender;
         proposal.opened = true;
         proposals[proposalId] = proposal;
-        LogNewProposal(proposalId, msg.sender, _paramsHash);
+        NewProposal(proposalId, msg.sender, _paramsHash);
         return proposalId;
     }
 
@@ -235,13 +236,13 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         // Check if on the awaiting list, if so, delete it:
         bool isFound;
         uint index;
-        (isFound, index) = findInArray(organizations[avatar].awaitingBoostProposals, _proposalId);
+        (isFound, index) = findInArray(organizationsData[avatar].awaitingBoostProposals, _proposalId);
         if (isFound) {
-            deleteFromArray(organizations[avatar].awaitingBoostProposals, index);
+            deleteFromArray(organizationsData[avatar].awaitingBoostProposals, index);
         }
 
         delete proposals[_proposalId];
-        LogCancelProposal(_proposalId);
+        CancelProposal(_proposalId);
         return true;
     }
 
@@ -299,6 +300,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
                 return(true, cnt);
             }
         }
+        return(false,0);
     }
 
     /**
@@ -315,7 +317,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
 
         // Retrieve org and parameters hash:
         address avatar = proposals[_proposalId].avatar;
-        require(avatar != address(0)); // Check propsal exists
+        require(proposals[_proposalId].avatar != address(0)); // Check propsal exists
         bytes32 orgParamsHash = getParametersFromController(Avatar(avatar));
         OrgParameters memory orgParams = organizationsParameters[orgParamsHash];
 
@@ -325,8 +327,8 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         proposals[_proposalId].boostedFunds = proposals[_proposalId].boostedFunds.add(_boostValue);
 
         // If proposal is not in awaiting list, try to add:
-        if (proposals[_proposalId].isAwaitingBoost) {
-            tryAwaitingBoostProposals(_proposalId);
+        if (!proposals[_proposalId].isAwaitingBoost) {
+            tryAwaitingBoostProposals(_proposalId,orgParams.attentionBandwidth,avatar);
         }
     }
 
@@ -340,7 +342,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         require(_avatar != address(0)); // Check propsal exists
         bytes32 orgParamsHash = getParametersFromController(Avatar(_avatar));
         OrgParameters memory orgParams = organizationsParameters[orgParamsHash];
-        Organization storage org = organizations[_avatar];
+        Organization storage org = organizationsData[_avatar];
 
         // Check we have free bandwidth:
         if (org.boostedProposals >= orgParams.attentionBandwidth) {
@@ -435,7 +437,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
                     }
                 }
                 delete proposals[_proposalId];
-                LogExecuteProposal(_proposalId, maxInd);
+                ExecuteProposal(_proposalId, maxInd);
                 (tmpProposal.executable).execute(_proposalId, tmpProposal.avatar, int(maxInd));
                 return true;
             }
@@ -445,7 +447,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         for (uint cnt2 = 0; cnt2<=proposal.numOfChoices; cnt2++) {
             if (proposal.votes[cnt2] > totalReputation*precReq/100) {
                 delete proposals[_proposalId];
-                LogExecuteProposal(_proposalId, cnt);
+                ExecuteProposal(_proposalId, cnt);
                 (tmpProposal.executable).execute(_proposalId, tmpProposal.avatar, int(cnt2));
                 return true;
             }
@@ -501,23 +503,13 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
     * @param _proposalId the id of the proposal that is being checked
     */
     // [TODO] event
-    function tryAwaitingBoostProposals(bytes32 _proposalId) internal {
+    function tryAwaitingBoostProposals(bytes32 _proposalId,uint attentionBandwidth,address avatar) private {
 
-        // Retrieve org and parameters hash:
-        address avatar = proposals[_proposalId].avatar;
-        require(avatar != address(0)); // Check propsal exists
-        bytes32 orgParamsHash = getParametersFromController(Avatar(avatar));
-        OrgParameters memory orgParams = organizationsParameters[orgParamsHash];
-        Organization storage org = organizations[avatar];
-
-        // If proposal already awaiting, return:
-        if (proposals[_proposalId].isAwaitingBoost) {
-            return;
-        }
+        Organization storage org = organizationsData[avatar];
 
         // If there is room just add proposal:
         // The Waiting list is twice the attentionBandwidth
-        uint maxAwaitingList = 2*orgParams.attentionBandwidth;
+        uint maxAwaitingList = 2*attentionBandwidth;
         if (org.awaitingBoostProposals.length < maxAwaitingList) {
             org.awaitingBoostProposals.push(_proposalId);
             proposals[_proposalId].isAwaitingBoost = true;
@@ -548,7 +540,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         proposal.totalVotes = (proposal.totalVotes).sub(voter.reputation);
 
         delete proposal.voters[_voter];
-        LogCancelVoting(_proposalId, _voter);
+        CancelVoting(_proposalId, _voter);
     }
 
     /**
@@ -558,8 +550,8 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
     */
     function deleteFromArray(bytes32[] storage _idsArray, uint _index) internal {
         assert(_idsArray.length > _index);
-        for (uint cnt = _index; cnt<_idsArray.length-1; cnt++) {
-            _idsArray[cnt] = _idsArray[cnt+1];
+        if (_index < _idsArray.length-1) {
+            _idsArray[_index] = _idsArray[_idsArray.length-1];
         }
         _idsArray.length--;
     }
@@ -613,7 +605,7 @@ contract EmergentVoteScheme is IntVoteInterface, UniversalScheme {
         }
 
         // Event:
-        LogVoteProposal(
+        VoteProposal(
             _proposalId,
             _voter,
             _vote,
