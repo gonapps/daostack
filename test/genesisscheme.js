@@ -135,7 +135,7 @@ contract('GenesisScheme', function(accounts) {
         await setup(accounts,amountToMint,amountToMint);
         var standardTokenMock = await StandardTokenMock.new(accounts[0], 100);
         try {
-         await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[100],["0x0000000F"],{ from: accounts[1]});
+         await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[false],["0x0000000F"],{ from: accounts[1]});
          assert(false,"should fail because accounts[1] does not hold the lock");
         }
         catch(ex){
@@ -165,7 +165,7 @@ contract('GenesisScheme', function(accounts) {
         var allowance = await standardTokenMock.allowance(avatar.address,accounts[1]);
         assert.equal(allowance,0);
 
-        await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[0],["0x0000000F"]);
+        await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[false],["0x0000000F"]);
         allowance = await standardTokenMock.allowance(avatar.address,accounts[1]);
         assert.equal(allowance,0);
     });
@@ -175,7 +175,7 @@ contract('GenesisScheme', function(accounts) {
         var controllerAddress,controller;
         await setup(accounts,amountToMint,amountToMint);
         var standardTokenMock = await StandardTokenMock.new(accounts[0], 100);
-        await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[0],["0x0000000F"]);
+        await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[false],["0x0000000F"]);
         controllerAddress = await avatar.owner();
         controller = await Controller.at(controllerAddress);
         var isSchemeRegistered = await controller.isSchemeRegistered(accounts[1]);
@@ -204,7 +204,7 @@ contract('GenesisScheme', function(accounts) {
         var standardTokenMock = await StandardTokenMock.new(accounts[0], 100);
         await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[0],["0x0000000F"]);
         try {
-         await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[100],["0x0000000F"],{ from: accounts[1]});
+         await genesisScheme.setSchemes(avatar.address,[accounts[1]],[0],[standardTokenMock.address],[false],["0x0000000F"],{ from: accounts[1]});
          assert(false,"should fail because lock for account[0] suppose to be deleted by the first call");
         }
         catch(ex){
