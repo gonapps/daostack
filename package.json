@@ -19,7 +19,8 @@
     "lint --fix": "eslint --fix .",
     "solium": "solium --dir ./contracts/",
     "truffle": "truffle",
-    "build": "rimraf build && truffle compile"
+    "build": "rimraf build && truffle compile",
+    "docs:serve": "node ./node_modules/docsify-cli/bin/docsify serve ./docs"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -30,6 +31,7 @@
     "babel-register": "^6.26.0",
     "bignumber.js": "^5.0.0",
     "default-options": "^1.0.0",
+    "docsify-cli": "^4.2.0",
     "eslint": "^4.14.0",
     "eslint-config-defaults": "^9.0.0",
     "eslint-config-standard": "^11.0.0-beta.0",
