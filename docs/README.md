@@ -51,7 +51,7 @@ import 'daostack-arc/contracts/universalShchems/UniversalScheme.sol';
 contract MyAwesomeScheme is UniversalScheme { ... }
 ```
 
-## Contrbuting to development
+## Contrbuting to Arc
 
 1. `$ yarn global add truffle ethereumjs-testrpc` - prerequisites: have [truffle](https://github.com/trufflesuite/truffle) and [testrpc](https://github.com/ethereumjs/testrpc) installed.
 2. `$ git clone https://github.com/daostack/daostack.git` - clone the repo.
@@ -68,4 +68,4 @@ Commands:
 
 This is an open source project ([GPL licence](https://github.com/daostack/daostack/blob/master/LICENSE)).
 PRs are welcome but please first consult with the [Contribution guide](https://github.com/daostack/daostack/blob/master/CONTRIBUTING.md).
-Join us at [Slack](https://daostack.slack.com/)!
+Join us on [Slack](https://daostack.slack.com/)!
