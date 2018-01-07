@@ -1,3 +1,8 @@
+# Resources
+
+* [Reference](ref.md)
+* [Guides & Recipes](guides.md)
+
 # Concepts
 
 ## An Overview of Arc
