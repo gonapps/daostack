@@ -1,27 +1,71 @@
-# DAOStack Docs
+# Concepts
 
-Welcome to DAOStack Docs!
-DAOStack is an operating system for DAOs built on the Ethereum blockchain.
+## An Overview of Arc
 
-## What is a DAO?
+Arc is the lower layer of the DAOStack. It consists of several smart contracts deployed on the Ethereum blockchain that define the basic building blocks and standard components that can be used to implement any DAO.
 
-[Decentrelized Autonomous Organizations(DAOs)](https://en.wikipedia.org/wiki/Decentralized_autonomous_organization) are living breathing entities that manage resources and make desicions on the blockchain based on a predefined set of rules expressed as a computer program. Running on the blockchain guarentees that they follow the defined rules exactly, and without a trusted party to manage it's execution.
+The DAOStack:
+1. [Ethereum](https://www.ethereum.org/) - *Base blockchain.*
+2. ArcHives - *A public curated database of [element](#element)s, organizations and a shared place for community collaboration*.
+3. **Arc - This project**
+4. [Arc.js](https://github.com/daostack/arc-js) - *Javascript library that talks to Arc, built on top of web3.js.*
+5. [Alchemy](https://github.com/daostack/Alchemy-Aurelia) (and more...) - *Collaborative DApps, built on top of DAOStack using Arc.js*
 
-## Why DAOStack?
+### The Structure of a DAO
 
-Building and maintating DAOs on the blockchain is tricky and error-prone. 
-DAOStack provides a set of simple well-tested, generic and flexible primitives that can be used to implement pretty much any DAO!
-Using DAOStack lets you focus on building your DAO instead of re-inventing the wheel, managing migrations and worrying about security vulnrabilities.
+Each DAO consists of the following components:
 
-## Resources
+* **Native token** - *A Standard [ERC20 token](https://theethereum.wiki/w/index.php/ERC20_Token_Standard) that defines the value system of the DAO, participants are rewarded for their contributions based on this token*.
+* **Reputation system** - *Similar to native token but is **non-transferable**, the reputation is used system is used to assign an importance to participants and their votes*.
+* **Avatar** - *This is the public facing part of the DAO that handles the interaction of the DAO with the rest of the world(interacing with other DAOs, paying third party participants, etc...)*.
+* **Subscribed elements** - *The set of Schemes and Global Constraints the DAO consists of*.
 
-* [Overview](overview.md)
-* [Roadmap](roadmap.md)
-* [Guides & Recipies](guides/guides.md)
-* [Extending DAOStack](extending.md)
-* [Reference](ref/ref.md)
-* [Read the whitepapar](https://github.com/daostack/daostack/blob/master/docs/DAOstack%20White%20Paper%20V1.0.pdf)
+Those components are orginized in a single smart contract called a *Controller*.
 
-## Getting Started
+### Elements
 
-1. `npm i --save daostack-arc`
+The main configurable and extendable building blocks of DAOs are: *Schemes* and *Global Constraints*, which are collectivley called *elements*.
+* **Schemes** *define the "do's" of the DAO, defining rules under which actions are taken, based on the participants input.* Examples of Schemes are:
+    * Rewarding contributions if other participants recognize them as worthy.
+    * Voting on proposals and automatically executing the chosen proposal.
+* **Global constraints** *define the "don't" of the DAO, they define conditions that must always hold and can prevent an action from being taken if it violates these conditions.* Examples of Global Constraints are:
+    * Limiting the amount of tokens or reputation that can be minted per day.
+    * Blacklisting certain participants from performing certain actions.
+
+### ArcHives and the Developer Ecosystem
+
+#### Compendium
+
+Developers can create and extend *elements* to define more rules that DAOs can subscribe to. Those *elements* can then be registered(for a fee) to a public database called *Compendium*. Developers get compensated for their work every time DAOs subscribes to one of their registered elements.
+
+# Getting Started
+
+## As a Solidity library
+
+1. Install npm package: `yarn add daostack-arc`/ `npm install daostack-arc`
+2. Import in your project. `import 'daostack-arc/contracts/...';`
+
+Example:
+```
+import 'daostack-arc/contracts/universalShchems/UniversalScheme.sol';
+contract MyAwesomeScheme is UniversalScheme { ... }
+```
+
+## Contrbuting to development
+
+1. `$ yarn global add truffle ethereumjs-testrpc` - prerequisites: have [truffle](https://github.com/trufflesuite/truffle) and [testrpc](https://github.com/ethereumjs/testrpc) installed.
+2. `$ git clone https://github.com/daostack/daostack.git` - clone the repo.
+3. `$ cd daostack`
+4. `/daostack/$ yarn` - install dependencies.
+
+*Note: Windows environments are not currently supported, please use a Unix based dev environment*.
+
+Commands:
+* `truffle test` - run unit tests.
+* `yarn lint` - lint javascript files.
+* `yarn solium` - lint Solidity files.
+
+
+This is an open source project ([GPL licence](https://github.com/daostack/daostack/blob/master/LICENSE)).
+PRs are welcome but please first consult with the [Contribution guide](https://github.com/daostack/daostack/blob/master/CONTRIBUTING.md).
+Join us at [Slack](https://daostack.slack.com/)!
